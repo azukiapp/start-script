@@ -1,0 +1,109 @@
+#!/bin/sh
+
+atput() {
+  [ -z "$TERM" ] && return 0
+  eval "tput $@"
+}
+
+format() {
+  echo "$@" | sed "
+    s/%{bold}/$(atput bold)/g;
+    s/%{underline}/$(atput smul)/g;
+    s/%{green}/$(atput setaf 2)/g;
+    s/%{yellow}/$(atput setaf 3)/g;
+    s/%{red}/$(atput setaf 1)/g;
+    s/%{blue}/$(atput setaf 4)/g;
+    s/%{reset}/$(atput sgr0)/g;
+    s/%{[a-z]*}//g;
+  "
+}
+
+command_exists() {
+  command -v ${@} > /dev/null 2>&1
+}
+
+match() {
+  if [ $# != 2 ]; then return 1; fi
+  echo "${1}" | grep -qE "${2}"
+}
+
+curl_or_wget() {
+  CURL_BIN="curl"; WGET_BIN="wget"
+  if command_exists ${CURL_BIN}; then
+    echo "${CURL_BIN} -sL"
+  elif command_exists ${WGET_BIN}; then
+    echo "${WGET_BIN} -qO-"
+  fi
+}
+
+install_azk() {
+  echo
+  ${FETCH_CMD} http://www.azk.io/install.sh | bash
+}
+
+stop_azk_installation() {
+  cat <<-EOS
+
+    $(format '%{bold}azk%{reset}') installation aborted.
+    To install azk, just run:
+      $(format "%{bold}\$ ${FETCH_CMD} http://www.azk.io/install.sh | sh%{reset}")
+
+EOS
+  exit 4
+}
+
+check_azk_installed() {
+  if ! command_exists $AZK_BIN; then
+    cat <<-EOS
+
+$(format '%{bold}%{green}Hi!%{reset}') The $( format '%{bold}Run Project button%{reset}') is a feature of $(format '%{bold}azk%{reset}').
+    $(format '%{bold}azk%{reset}') is an open-source engine to orchestrate development environments.
+
+    It seems you don't have $(format "%{bold}$AZK_BIN%{reset}") installed on your machine yet.
+
+EOS
+    FETCH_CMD=$(curl_or_wget)
+    if [ -z "${FETCH_CMD}" ]; then
+      cat <<-EOS
+    To install $(format "%{bold}$AZK_BIN%{reset}"), please check out our docs at:
+      $(format '%{bold}%{underline}http://docs.azk.io/en/installation%{reset}')
+
+EOS
+      exit 1
+    else
+      trap stop_azk_installation INT
+      cat <<-EOS
+    Installing $(format '%{bold}azk%{reset}') in $(format '%{bold}10 seconds%{reset}').
+    To prevent its installation, just press CTRL+C now.
+EOS
+      sleep 10
+      install_azk && newgrp docker
+    fi
+  fi
+}
+
+check_repo_project() {
+  HTTPS_REGEX="^https://github.com/[^/]+/[^/]+$"
+  SSH_REGEX="^git@github.com:[^/]+/[^/]+.git$"
+  SHORT_REGEX="^[^/]+/[^/]+$"
+
+  if ! match ${REPO_PROJECT} "${SHORT_REGEX}|${HTTPS_REGEX}|${SSH_REGEX}"; then
+    cat <<-EOS
+$(format "%{bold}%{yellow}Ops!%{reset}") It seems you haven't copied the whole command.
+     Please ensure it's complete and try again.
+EOS
+    exit 2
+  fi
+}
+
+AZK_BIN="azk"
+REPO_PROJECT="${1}"
+if [ ! -z "${2}" ]; then GIT_REF=" --git-ref ${2}"; fi
+
+if check_azk_installed; then
+  check_repo_project
+  exec azk start -o ${REPO_PROJECT}${GIT_REF}
+else
+  exit 3
+fi
+
