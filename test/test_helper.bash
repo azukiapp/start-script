@@ -1,6 +1,6 @@
 __FILE__="${BASH_SOURCE[0]}"
 export TESTS_DIR=$( cd "$( dirname "${__FILE__}" )" && pwd )
-export RUN_SH=$(readlink -f $TESTS_DIR/../run.sh)
+export RUN_SH=$(readlink -f $TESTS_DIR/../start.sh)
 
 load ${TESTS_DIR}/shared/assertions.bash
 
