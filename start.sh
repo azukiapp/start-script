@@ -77,7 +77,7 @@ EOS
     To prevent its installation, just press CTRL+C now.
 EOS
       sleep 10
-      install_azk && newgrp docker
+      install_azk
     fi
   fi
 }
@@ -102,7 +102,7 @@ if [ ! -z "${2}" ]; then GIT_REF=" --git-ref ${2}"; fi
 
 if check_azk_installed; then
   check_repo_project
-  exec azk start -o ${REPO_PROJECT}${GIT_REF}
+  sg docker -c "yes | azk agent start; azk start -o ${REPO_PROJECT}${GIT_REF}"
 else
   exit 3
 fi
