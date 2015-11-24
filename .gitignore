@@ -1,5 +1,7 @@
-.vimrc
-.env
+node_modules/
+lib/
 .azk
-/lib
-/build
+.npm
+.bash_history
+.env
+.awspublish-*
