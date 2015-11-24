@@ -15,13 +15,13 @@ load test_helper
 @test "Assert run.sh with repo" {
   result=$( cat ${RUN_SH} | sh -s ${MOCK_PROJECT} )
   run echo $result
-  assert_output "azk start -o ${MOCK_PROJECT}"
+  assert_output "azk agent start azk start -o ${MOCK_PROJECT}"
 }
 
 @test "Assert run.sh with repo and branch" {
   result=$( cat ${RUN_SH} | sh -s ${MOCK_PROJECT} ${MOCK_BRANCH} )
   run echo $result
-  assert_output "azk start -o ${MOCK_PROJECT} --git-ref ${MOCK_BRANCH}"
+  assert_output "azk agent start azk start -o ${MOCK_PROJECT} --git-ref ${MOCK_BRANCH}"
 }
 
 @test "Refute run.sh without repo" {

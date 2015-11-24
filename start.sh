@@ -102,7 +102,14 @@ if [ ! -z "${2}" ]; then GIT_REF=" --git-ref ${2}"; fi
 
 if check_azk_installed; then
   check_repo_project
-  sg docker -c "yes | azk agent start; azk start -o ${REPO_PROJECT}${GIT_REF}"
+
+  if match "$(uname -a)" "^Linux\ " && \
+     ! match "$(id -Gn)" "(^|\ )docker(\ |$)" && \
+     getent group docker > /dev/null 2>&1; then
+    sg docker -c "yes | azk agent start; azk start -o ${REPO_PROJECT}${GIT_REF}"
+  else
+    yes | azk agent start; azk start -o ${REPO_PROJECT}${GIT_REF}
+  fi
 else
   exit 3
 fi
