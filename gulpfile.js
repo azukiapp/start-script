@@ -33,7 +33,7 @@ gulp.task('deploy', function() {
 
   var replace = require('gulp-replace');
 
-  // Replaces for production from .env
+  // Replaces for production
   var src = gulp.src("./start.sh");
   if (! yargs.argv.production) {
     // Replacing azk repository
