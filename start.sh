@@ -46,7 +46,7 @@ stop_azk_installation() {
 
     $(format '%{bold}azk%{reset}') installation aborted.
     To install azk, just run:
-      $(format "%{bold}\$ ${FETCH_CMD} http://www.azk.io/install.sh | sh%{reset}")
+      $(format "%{bold}\$ ${FETCH_CMD} http://www.azk.io/install.sh | bash%{reset}")
 
 EOS
   exit 4
