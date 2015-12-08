@@ -71,13 +71,13 @@ EOS
 EOS
       exit 1
     else
-      trap stop_azk_installation SIGINT
+      trap stop_azk_installation INT
       cat <<-EOS
     Installing $(format '%{bold}azk%{reset}') in $(format '%{bold}10 seconds%{reset}').
     To prevent its installation, just press CTRL+C now.
 EOS
       sleep 10
-      trap - SIGINT
+      trap - INT
       install_azk
     fi
   fi
