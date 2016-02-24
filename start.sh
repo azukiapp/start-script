@@ -107,16 +107,10 @@ EOS
 check_azk_updated() {
   if ! azk_is_up_to_date; then
     FETCH_CMD=$(curl_or_wget)
-    if [ -z "${FETCH_CMD}" ]; then
-      cat <<-EOS
-    To update $(format "%{bold}$AZK_BIN%{reset}"), please check out our docs at:
-      $(format '%{bold}%{underline}http://docs.azk.io/en/installation/upgrading.html%{reset}')
-
-EOS
-      exit 1
-    else
+    if [ ! -z "${FETCH_CMD}" ]; then
       trap skip_azk_update INT
       cat <<-EOS
+
     $(format "%{bold}azk v${AZK_LATEST_VERSION}%{reset}") is available!
     Updating $(format "%{bold}azk%{reset}") in $(format '%{bold}10 seconds%{reset}').
 
