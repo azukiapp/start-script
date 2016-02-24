@@ -19,7 +19,7 @@ format() {
 }
 
 command_exists() {
-  command -v ${@} > /dev/null 2>&1
+  which ${@} > /dev/null 2>&1
 }
 
 match() {
@@ -36,7 +36,7 @@ curl_or_wget() {
   fi
 }
 
-install_azk() {
+install_or_update_azk() {
   echo
   ${FETCH_CMD} http://www.azk.io/install.sh | bash
 }
@@ -78,7 +78,57 @@ EOS
 EOS
       sleep 10
       trap - INT
-      install_azk
+      install_or_update_azk
+    fi
+  fi
+}
+
+azk_is_up_to_date() {
+  AZK_CURRENT_VERSION=$(azk version | cut -d ' ' -f2)
+  AZK_TAGS_URL="https://api.github.com/repos/azukiapp/azk/tags"
+  AZK_LATEST_VERSION=$( curl -sSL ${AZK_TAGS_URL} | \
+                        grep name | \
+                        head -1 | \
+                        sed 's/[^0-9.]*"v\([0-9.]*\).*",/\1/' )
+  [ "${AZK_CURRENT_VERSION}" = "${AZK_LATEST_VERSION}" ]
+}
+
+skip_azk_update() {
+  cat <<-EOS
+
+    To upgrade $(format '%{bold}azk%{reset}'), just run:
+      $(format "%{bold}\$ ${FETCH_CMD} http://www.azk.io/install.sh | bash%{reset}")
+
+EOS
+  SKIP_UPDATE='true'
+  kill -13 ${SLEEP_PID} > /dev/null 2>&1
+}
+
+check_azk_updated() {
+  if ! azk_is_up_to_date; then
+    FETCH_CMD=$(curl_or_wget)
+    if [ -z "${FETCH_CMD}" ]; then
+      cat <<-EOS
+    To update $(format "%{bold}$AZK_BIN%{reset}"), please check out our docs at:
+      $(format '%{bold}%{underline}http://docs.azk.io/en/installation/upgrading.html%{reset}')
+
+EOS
+      exit 1
+    else
+      trap skip_azk_update INT
+      cat <<-EOS
+    $(format "%{bold}azk v${AZK_LATEST_VERSION}%{reset}") is available!
+    Updating $(format "%{bold}azk%{reset}") in $(format '%{bold}10 seconds%{reset}').
+
+    To prevent it, just press CTRL+C now.
+EOS
+      sleep 10 &
+      SLEEP_PID=$!
+      wait > /dev/null 2>&1
+      trap - INT
+      if [ -z ${SKIP_UPDATE} ]; then
+        install_or_update_azk
+      fi
     fi
   fi
 }
@@ -99,17 +149,19 @@ EOS
 
 AZK_BIN="azk"
 REPO_PROJECT="${1}"
-if [ ! -z "${2}" ]; then GIT_REF=" --git-ref ${2}"; fi
+if [ ! -z "${2}" ]; then
+  GIT_REF=" --git-ref ${2}"
+fi
 
-if check_azk_installed; then
+if check_azk_installed && check_azk_updated; then
   check_repo_project
 
   if match "$(uname -a)" "^Linux\ " && \
      ! match "$(id -Gn)" "(^|\ )docker(\ |$)" && \
      getent group docker > /dev/null 2>&1; then
-    sg docker -c "azk agent start && azk start -o ${REPO_PROJECT}${GIT_REF}"
+    sg docker -c "azk agent start && echo && azk start -o ${REPO_PROJECT}${GIT_REF}"
   else
-    azk agent start && azk start -o ${REPO_PROJECT}${GIT_REF}
+    azk agent start && echo && azk start -o ${REPO_PROJECT}${GIT_REF}
   fi
 else
   exit 3
