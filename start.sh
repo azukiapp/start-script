@@ -142,10 +142,7 @@ EOS
 }
 
 AZK_BIN="azk"
-REPO_PROJECT="${1}"
-if [ ! -z "${2}" ]; then
-  GIT_REF=" --git-ref ${2}"
-fi
+REPO_PROJECT="${1}"; shift
 
 if check_azk_installed && check_azk_updated; then
   check_repo_project
@@ -153,9 +150,9 @@ if check_azk_installed && check_azk_updated; then
   if match "$(uname -a)" "^Linux\ " && \
      ! match "$(id -Gn)" "(^|\ )docker(\ |$)" && \
      getent group docker > /dev/null 2>&1; then
-    sg docker -c "azk agent start && echo && azk start -o ${REPO_PROJECT}${GIT_REF}"
+    sg docker -c "azk agent start && echo && azk start -o ${REPO_PROJECT} ${@}"
   else
-    azk agent start && echo && azk start -o ${REPO_PROJECT}${GIT_REF}
+    azk agent start && echo && azk start -o ${REPO_PROJECT} ${@}
   fi
 else
   exit 3
