@@ -1,2 +1,16 @@
 #!/bin/sh
+
+azk_latest_version() {
+  AZK_TAGS_URL="https://api.github.com/repos/azukiapp/azk/tags"
+  curl -sSL ${AZK_TAGS_URL} | \
+    grep name | \
+    head -1 | \
+    sed 's/[^0-9.]*"v\([0-9.]*\).*",/\1/'
+}
+
+if [ "$1" == "version" ]; then
+  echo "azk version $(azk_latest_version)"
+  exit 0
+fi
+
 echo "${0##*/}" "$@"

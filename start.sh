@@ -144,9 +144,9 @@ EOS
 AZK_BIN="azk"
 REPO_PROJECT="${1}"; shift
 
-if check_azk_installed && check_azk_updated; then
-  check_repo_project
+check_repo_project
 
+if check_azk_installed && check_azk_updated; then
   if match "$(uname -a)" "^Linux\ " && \
      ! match "$(id -Gn)" "(^|\ )docker(\ |$)" && \
      getent group docker > /dev/null 2>&1; then
